@@ -1,12 +1,10 @@
 <!doctype html>
 <html lang="th">
 <head>
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Futures Calculator – Fixed PnL (PWA)</title>
-<link rel="manifest" href="manifest.webmanifest?v=1">
-<link rel="icon" href="icons/icon-192.png">
-<meta name="theme-color" content="#22d3ee">
+<title>Futures Calculator – Fixed PnL</title>
 <style>
   :root{--bg:#0b1020;--muted:#9aa4b2;--text:#e5e7eb;--border:rgba(148,163,184,.25);--green:#10b981;--red:#ef4444;--brand:#22d3ee;}
   *{box-sizing:border-box}
@@ -22,7 +20,7 @@
   .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   @media(max-width:680px){.row{grid-template-columns:1fr}}
   label{display:block;font-size:.86rem;color:var(--muted);margin:6px 2px}
-  input[type=number]{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0b1224;color:#e5e7eb}
+  input[type=number]{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0b1224;color:var(--text)}
   input[type=range]{width:100%}
   .seg{display:flex;border:1px solid var(--border);border-radius:999px;overflow:hidden;margin-bottom:8px}
   .seg button{flex:1;padding:10px 12px;border:0;background:transparent;color:var(--muted);font-weight:700}
@@ -42,7 +40,7 @@
     <div class="logo"></div>
     <div>
       <h1>Futures คำนวณ PnL / Target / Max / Liquidation</h1>
-      <div class="muted" style="font-size:.8rem">เวอร์ชันแก้ PnL — รองรับ Qty (เหรียญ) หรือ Position (USDT) • PWA พร้อมติดตั้ง</div>
+      <div class="muted" style="font-size:.8rem">เวอร์ชันแก้ PnL — รองรับ Qty (เหรียญ) หรือ Position (USDT)</div>
     </div>
   </header>
 
@@ -62,7 +60,7 @@
     <label>Leverage: <span id="levShow">20x</span></label>
     <input id="lev" type="range" min="1" max="125" step="1" value="20">
 
-    <div class="row">
+    <div class="row"><div><label>Symbol (เช่น BTCUSDT)</label><input id="symbol1" type="text" placeholder="BTCUSDT"></div>
       <div><label>Entry Price</label><input id="entry1" type="number" step="0.0001" value="23.500"></div>
       <div><label>Exit Price</label><input id="exit1" type="number" step="0.0001" value="24.000"></div>
       <div><label>Quantity (เหรียญ)</label><input id="qty1" type="number" step="0.000001" value="10"></div>
@@ -126,18 +124,10 @@
       <div class="tile"><h3>Liquidation (ประมาณการ Isolated)</h3><div id="liq4" class="muted">-</div></div>
       <div class="tile"><h3>ระยะจาก Entry</h3><div id="dist4" class="muted">-</div></div>
     </div>
-    <div class="note">สูตรคร่าว: Long ≈ E×(1 − 1/L + MMR), Short ≈ E×(1 + 1/L − MMR)</div>
   </section>
 </div>
 
 <script>
-// PWA registration
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(console.error);
-  });
-}
-
 const fmt=(n,d=2)=>isFinite(n)?Number(n).toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d}):'-';
 function switchTab(tab){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));document.querySelectorAll('section').forEach(s=>s.style.display='none');document.getElementById(tab).style.display='block';}
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
@@ -240,6 +230,7 @@ calcLiq();
 // ===== Save as Image =====
 const saveBtn=document.getElementById('saveImgBtn'); const canvas=document.getElementById('shareCanvas');
 function saveAsImage(){
+  const symbol=document.getElementById('symbol1').value || '-';
   const entry=document.getElementById('entry1').value || '-';
   const exit =document.getElementById('exit1').value  || '-';
   const qty  =document.getElementById('qty1').value   || '-';
@@ -260,6 +251,7 @@ function saveAsImage(){
   ctx.fillText('คำนวน Trade Futures – สรุปผลลัพธ์', 40, 80);
   ctx.font='600 28px system-ui, Segoe UI, Roboto'; ctx.fillStyle='#9aa4b2';
   const qtyShow = posUS ? `${posUS} USDT (~${qty}u)` : `${qty}u`;
+  ctx.fillStyle='#22d3ee'; ctx.fillText(`Symbol: ${symbol}`, 40, 160); ctx.fillStyle='#9aa4b2';
   ctx.fillText(`โหมด: ${side}  •  Leverage: ${levv}x`, 40, 120);
   const box=(x,y,title,value,color='#e5e7eb')=>{
     ctx.fillStyle='rgba(148,163,184,0.15)'; ctx.strokeStyle='rgba(148,163,184,0.35)'; ctx.lineWidth=2;
@@ -269,14 +261,14 @@ function saveAsImage(){
   };
   const pnlColor=pnl.trim().startsWith('+')?'#10b981':'#ef4444';
   const roiColor=roi.trim().startsWith('+')?'#10b981':'#ef4444';
-  box(40,160,'Entry / Exit / Qty', `${entry} / ${exit}  •  ${qtyShow}`);
-  box(40,300,'Position Value', pos);
-  box(40,440,'Initial Margin', im);
-  box(620,160,'PnL', pnl, pnlColor);
-  box(620,300,'ROI', roi, roiColor);
-  box(620,440,'Liquidation (≈)', liq, '#fbbf24');
+  box(40,200,'Entry / Exit / Qty', `${entry} / ${exit}  •  ${qtyShow}`);
+  box(40,340,'Position Value', pos);
+  box(40,480,'Initial Margin', im);
+  box(620,200,'PnL', pnl, pnlColor);
+  box(620,340,'ROI', roi, roiColor);
+  box(620,480,'Liquidation (≈)', liq, '#fbbf24');
   ctx.fillStyle='#94a3b8'; ctx.font='600 20px system-ui';
-  ctx.fillText('คำนวน Trade Futures • เวอร์ชันแก้ PnL (PWA)', 40, h-30);
+  ctx.fillText('คำนวน Trade Futures • เวอร์ชันแก้ PnL (ไฟล์เดียว)', 40, h-30);
   const link=document.createElement('a'); link.download=`futures-summary-${Date.now()}.png`; link.href=canvas.toDataURL('image/png'); link.click();
 }
 if(saveBtn) saveBtn.addEventListener('click', saveAsImage);
