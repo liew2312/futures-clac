@@ -1,7 +1,7 @@
 {
   "name": "คำนวน Trade Futures",
   "short_name": "FuturesCalc",
-  "description": "คำนวณ Futures (Fixed PnL) และแสดงผล Position/IM/PnL แบบหาร 10",
+  "description": "คำนวณ Futures: PnL, Target, Max Open, Liquidation • ปรับสเกลแสดงผลได้ (1x/0.1x)",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#0b1020",
