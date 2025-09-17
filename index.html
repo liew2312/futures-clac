@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Futures Calculator – Scale Toggle</title>
-<link rel="manifest" href="manifest.webmanifest?v=4">
+<title>Futures Calculator – Fixed PnL (PWA)</title>
+<link rel="manifest" href="manifest.webmanifest?v=1">
 <link rel="icon" href="icons/icon-192.png">
 <meta name="theme-color" content="#22d3ee">
 <style>
@@ -12,8 +12,7 @@
   *{box-sizing:border-box}
   body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;background:linear-gradient(180deg,var(--bg),#060a1a);color:var(--text)}
   .wrap{max-width:860px;margin:auto;padding:16px}
-  header{display:flex;align-items:center;gap:10px;margin:6px 0 14px;justify-content:space-between}
-  .brand{display:flex;align-items:center;gap:10px}
+  header{display:flex;align-items:center;gap:10px;margin:6px 0 14px}
   .logo{width:36px;height:36px;border-radius:12px;background:radial-gradient(35% 35% at 30% 30%,var(--brand),#60a5fa);box-shadow:0 10px 30px rgba(34,211,238,.35)}
   h1{font-size:1.2rem;margin:0}
   .tabs{display:flex;background:#0f172a;border:1px solid var(--border);border-radius:14px;overflow:hidden}
@@ -26,36 +25,24 @@
   input[type=number]{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0b1224;color:#e5e7eb}
   input[type=range]{width:100%}
   .seg{display:flex;border:1px solid var(--border);border-radius:999px;overflow:hidden;margin-bottom:8px}
-  .seg button{flex:1;padding:10px 12px;border:0;background:transparent;color:var(--muted);font-weight:700;cursor:pointer}
+  .seg button{flex:1;padding:10px 12px;border:0;background:transparent;color:var(--muted);font-weight:700}
   .seg button.active{background:#1f2937;color:#e5e7eb}
   .result{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
   .tile{background:#0b1224;border:1px dashed var(--border);border-radius:14px;padding:10px}
   .tile h3{margin:0 0 4px;font-size:.95rem}
   .pos{color:var(--green)} .neg{color:var(--red)} .muted{color:#9aa4b2}
-  .btn{appearance:none;border:1px solid var(--border);background:#13203a;color:#67e8f9;border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer}
+  .btn{appearance:none;border:1px solid var(--border);background:#13203a;color:#67e8f9;border-radius:12px;padding:10px 12px;font-weight:700}
   .divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:10px 0}
   .note{font-size:.74rem;color:#9aa4b2}
-  .scale-wrap{display:flex;align-items:center;gap:10px}
-  .scale-wrap .seg{margin:0}
-  .hint{font-size:.72rem;color:#94a3b8}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div class="brand">
-      <div class="logo"></div>
-      <div>
-        <h1>Futures คำนวณ PnL / Target / Max / Liquidation</h1>
-        <div class="muted" style="font-size:.8rem">รองรับ Qty หรือ Position (USDT) • ติดตั้งเป็น PWA ได้</div>
-      </div>
-    </div>
-    <div class="scale-wrap">
-      <div class="hint">สเกลแสดงผล</div>
-      <div class="seg" style="width:140px">
-        <button id="scale1x" class="active">1×</button>
-        <button id="scale01x">0.1×</button>
-      </div>
+    <div class="logo"></div>
+    <div>
+      <h1>Futures คำนวณ PnL / Target / Max / Liquidation</h1>
+      <div class="muted" style="font-size:.8rem">เวอร์ชันแก้ PnL — รองรับ Qty (เหรียญ) หรือ Position (USDT) • PWA พร้อมติดตั้ง</div>
     </div>
   </header>
 
@@ -94,7 +81,6 @@
     <div class="divider"></div>
     <button class="btn" id="saveImgBtn">บันทึกผลลัพธ์เป็นภาพ (PNG)</button>
     <canvas id="shareCanvas" width="1200" height="630" style="display:none"></canvas>
-    <div class="hint">*สเกลแสดงผลมีผลเฉพาะค่าที่แสดงบนหน้าและรูปภาพที่บันทึก สูตรคำนวณจริงไม่เปลี่ยน</div>
   </section>
 
   <!-- TARGET TAB -->
@@ -140,6 +126,7 @@
       <div class="tile"><h3>Liquidation (ประมาณการ Isolated)</h3><div id="liq4" class="muted">-</div></div>
       <div class="tile"><h3>ระยะจาก Entry</h3><div id="dist4" class="muted">-</div></div>
     </div>
+    <div class="note">สูตรคร่าว: Long ≈ E×(1 − 1/L + MMR), Short ≈ E×(1 + 1/L − MMR)</div>
   </section>
 </div>
 
@@ -150,12 +137,6 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(console.error);
   });
 }
-
-let dispScale = 1; // 1 or 0.1
-const scale1x = document.getElementById('scale1x');
-const scale01x = document.getElementById('scale01x');
-scale1x.addEventListener('click', ()=>{dispScale=1; scale1x.classList.add('active'); scale01x.classList.remove('active'); calcPnL();});
-scale01x.addEventListener('click', ()=>{dispScale=0.1; scale01x.classList.add('active'); scale1x.classList.remove('active'); calcPnL();});
 
 const fmt=(n,d=2)=>isFinite(n)?Number(n).toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d}):'-';
 function switchTab(tab){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));document.querySelectorAll('section').forEach(s=>s.style.display='none');document.getElementById(tab).style.display='block';}
@@ -176,6 +157,8 @@ function calcPnL(){
   const exit  = parseFloat(document.getElementById('exit1').value)||0;
   const qtyIn = parseFloat(document.getElementById('qty1').value)||0;      // จำนวนเหรียญ (ถ้าผู้ใช้กรอก)
   const posUS = parseFloat(document.getElementById('posUSDT1').value)||0;  // Position เป็น USDT (ถ้าผู้ใช้กรอก)
+
+  // ถ้ากรอก Position(USDT) ให้แปลงเป็นจำนวนเหรียญอัตโนมัติ
   const qty   = (posUS>0 && entry>0) ? (posUS/entry) : qtyIn;
 
   const L     = Math.max(1, parseInt(lev.value)||1);
@@ -188,10 +171,9 @@ function calcPnL(){
 
   const roi   = im>0 ? (pnl/im)*100 : NaN;
 
-  // Apply display scale (1x or 0.1x) ONLY for shown values
-  document.getElementById('pos1').textContent = fmt(position*dispScale,2)+' USDT';
-  document.getElementById('im1').textContent  = fmt(im*dispScale,2)+' USDT';
-  document.getElementById('pnl1').textContent = (pnl>=0?'+':'')+fmt(pnl*dispScale,2)+' USDT';
+  document.getElementById('pos1').textContent = fmt(position,2)+' USDT';
+  document.getElementById('im1').textContent  = fmt(im,2)+' USDT';
+  document.getElementById('pnl1').textContent = (pnl>=0?'+':'')+fmt(pnl,2)+' USDT';
   document.getElementById('pnl1').className   = 'muted ' + (pnl>=0?'pos':'neg');
   document.getElementById('roi1').textContent = isFinite(roi)?((roi>=0?'+':'')+fmt(roi,2)+' %'):'-';
   document.getElementById('roi1').className   = 'muted ' + (roi>=0?'pos':'neg');
@@ -255,25 +237,20 @@ function calcLiq(){
 }
 calcLiq();
 
-// ===== Save as Image (respect display scale) =====
+// ===== Save as Image =====
 const saveBtn=document.getElementById('saveImgBtn'); const canvas=document.getElementById('shareCanvas');
 function saveAsImage(){
-  const entry = parseFloat(document.getElementById('entry1').value)||0;
-  const exit  = parseFloat(document.getElementById('exit1').value)||0;
-  const qtyIn = parseFloat(document.getElementById('qty1').value)||0;
-  const posUS = parseFloat(document.getElementById('posUSDT1').value)||0;
-  const qty   = (posUS>0 && entry>0) ? (posUS/entry) : qtyIn;
-  const L     = Math.max(1, parseInt(document.getElementById('lev').value)||1);
-  const position = entry * qty;
-  const im = position / L;
-  let pnl = (exit - entry) * qty; if(document.getElementById('shortBtn').classList.contains('active')) pnl = (entry - exit)*qty;
-
-  // apply display scale for image too
-  const posDisp=position*dispScale, imDisp=im*dispScale, pnlDisp=pnl*dispScale;
-
-  const liqText = document.getElementById('liq1').textContent || '-';
-  const side  = (document.getElementById('longBtn').classList.contains('active')?'Long':'Short');
-
+  const entry=document.getElementById('entry1').value || '-';
+  const exit =document.getElementById('exit1').value  || '-';
+  const qty  =document.getElementById('qty1').value   || '-';
+  const posUS=document.getElementById('posUSDT1').value||'';
+  const levv =document.getElementById('lev').value    || '-';
+  const pos  =document.getElementById('pos1').textContent || '-';
+  const im   =document.getElementById('im1').textContent  || '-';
+  const pnl  =document.getElementById('pnl1').textContent || '-';
+  const roi  =document.getElementById('roi1').textContent || '-';
+  const liq  =document.getElementById('liq1').textContent || '-';
+  const side =(document.getElementById('longBtn').classList.contains('active')?'Long':'Short');
   const ctx=canvas.getContext('2d'); const w=canvas.width,h=canvas.height;
   const grad=ctx.createLinearGradient(0,0,0,h); grad.addColorStop(0,'#0b1020'); grad.addColorStop(1,'#061024');
   ctx.fillStyle=grad; ctx.fillRect(0,0,w,h);
@@ -282,23 +259,24 @@ function saveAsImage(){
   ctx.fillStyle='#e5e7eb'; ctx.font='bold 44px system-ui, Segoe UI, Roboto';
   ctx.fillText('คำนวน Trade Futures – สรุปผลลัพธ์', 40, 80);
   ctx.font='600 28px system-ui, Segoe UI, Roboto'; ctx.fillStyle='#9aa4b2';
-  ctx.fillText(`โหมด: ${side}  •  Leverage: ${L}x`, 40, 120);
+  const qtyShow = posUS ? `${posUS} USDT (~${qty}u)` : `${qty}u`;
+  ctx.fillText(`โหมด: ${side}  •  Leverage: ${levv}x`, 40, 120);
   const box=(x,y,title,value,color='#e5e7eb')=>{
     ctx.fillStyle='rgba(148,163,184,0.15)'; ctx.strokeStyle='rgba(148,163,184,0.35)'; ctx.lineWidth=2;
     ctx.beginPath(); if(ctx.roundRect){ctx.roundRect(x,y,500,120,16);} else {ctx.rect(x,y,500,120);} ctx.fill(); ctx.stroke();
     ctx.fillStyle='#94a3b8'; ctx.font='600 24px system-ui'; ctx.fillText(title,x+20,y+40);
     ctx.fillStyle=color; ctx.font='bold 40px system-ui'; ctx.fillText(value,x+20,y+88);
   };
-  const fmt2=(x)=> isFinite(x)? Number(x).toLocaleString(undefined,{maximumFractionDigits:2,minimumFractionDigits:2}) : '-';
-  const pnlColor = pnlDisp>=0 ? '#10b981' : '#ef4444';
-  box(40,160,'Entry / Exit / Qty', `${entry||'-'} / ${exit||'-'}  •  ${isFinite(qty)?qty.toLocaleString(undefined,{maximumFractionDigits:6}):'-'}u`);
-  box(40,300,'Position Value', `${fmt2(posDisp)} USDT`);
-  box(40,440,'Initial Margin', `${fmt2(imDisp)} USDT`);
-  box(620,160,'PnL', `${pnlDisp>=0?'+':''}${fmt2(pnlDisp)} USDT`, pnlColor);
-  box(620,300,'ROI', document.getElementById('roi1').textContent || '-');
-  box(620,440,'Liquidation (≈)', liqText, '#fbbf24');
+  const pnlColor=pnl.trim().startsWith('+')?'#10b981':'#ef4444';
+  const roiColor=roi.trim().startsWith('+')?'#10b981':'#ef4444';
+  box(40,160,'Entry / Exit / Qty', `${entry} / ${exit}  •  ${qtyShow}`);
+  box(40,300,'Position Value', pos);
+  box(40,440,'Initial Margin', im);
+  box(620,160,'PnL', pnl, pnlColor);
+  box(620,300,'ROI', roi, roiColor);
+  box(620,440,'Liquidation (≈)', liq, '#fbbf24');
   ctx.fillStyle='#94a3b8'; ctx.font='600 20px system-ui';
-  ctx.fillText('คำนวน Trade Futures', 40, h-30);
+  ctx.fillText('คำนวน Trade Futures • เวอร์ชันแก้ PnL (PWA)', 40, h-30);
   const link=document.createElement('a'); link.download=`futures-summary-${Date.now()}.png`; link.href=canvas.toDataURL('image/png'); link.click();
 }
 if(saveBtn) saveBtn.addEventListener('click', saveAsImage);

@@ -1,7 +1,7 @@
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open('futures-calc-scale-toggle-v1').then((cache) => cache.addAll([
+    caches.open('futures-calc-fixed-v1').then((cache) => cache.addAll([
       './',
       './index.html',
       './manifest.webmanifest',

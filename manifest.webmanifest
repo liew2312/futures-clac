@@ -1,7 +1,7 @@
 {
   "name": "คำนวน Trade Futures",
   "short_name": "FuturesCalc",
-  "description": "คำนวณ Futures: PnL, Target, Max Open, Liquidation • ปรับสเกลแสดงผลได้ (1x/0.1x)",
+  "description": "คำนวณ Futures: PnL, Target, Max Open, Liquidation (Fixed PnL)",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#0b1020",
