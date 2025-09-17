@@ -1,11 +1,11 @@
 {
-  "name": "คำนวน Trade Futures",
+  "name": "Futures Calculator",
   "short_name": "FuturesCalc",
-  "description": "คำนวณ Futures: PnL, Target, Max Open, Liquidation (Fixed PnL)",
-  "start_url": "./",
+  "start_url": ".",
+  "scope": ".",
   "display": "standalone",
   "background_color": "#0b1020",
-  "theme_color": "#22d3ee",
+  "theme_color": "#0b1020",
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -16,6 +16,18 @@
       "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+    {
+      "src": "icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
